@@ -101,6 +101,10 @@
             <xpath expr="//page[@id='aml_tab']/field[@name='line_ids']/tree/field[@name='payment_id']" position="after">
                 <field name="l10n_do_itbis_amount" invisible="1" force_save="1"/>
             </xpath>
+
+             <xpath expr="//field[@name='invoice_partner_bank_id']" position="after">
+                <field name="pay_to" attrs="{'readonly': [('state', '!=', 'draft')], 'invisible': [('type', 'not in', ['in_invoice', 'in_refund'])]}"/>
+            </xpath>
         </field>
     </record>
 

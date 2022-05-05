@@ -109,6 +109,28 @@ class AccountMove(models.Model):
         "ECF XML File Name", copy=False, readonly=True
     )
 
+    pay_to = fields.Many2one("res.partner", string="Pagar a:", readonly=True,
+                             states={'draft': [('readonly', False)]}, copy=False)
+
+    @api.onchange("pay_to")
+    def onchange_pay_to(self):
+        if self.partner_id and self.partner_id == self.pay_to:
+            self.pay_to = False
+            raise UserError(_("El proveedor no debe ser el mismo en el campo 'Pagar a'."))
+
+    def action_post(self):
+        # move = self._context.get("move", False)
+        for item in self:
+            if item.type in ('in_invoice', 'in_refund'):
+                pay_account = item.partner_id.property_account_payable_id.id
+                if item.pay_to:
+                    for line in item.line_ids:
+                        if line.account_id.id == pay_account:
+                            line.update({
+                                "partner_id": item.pay_to.id
+                            })
+            return super(AccountMove, self).action_post()
+
     @api.depends(
         "l10n_latam_country_code",
         "l10n_latam_document_type_id.l10n_do_ncf_type",
